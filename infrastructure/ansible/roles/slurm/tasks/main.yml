@@ -1,0 +1,92 @@
+---
+# --- Common Setup ---
+- name: Install Munge and Slurm dependencies
+  package:
+    name:
+      - munge
+      - slurm-slurmd
+      - slurm-slurmctld # On Rocky this might be separate, usually 'slurm' covers base. checking specific OS support might be needed but assuming Rocky/RHEL names here or EPEL.
+      # For Rocky/RHEL (EPEL): munge, slurm, slurm-slurmd, slurm-slurmctld
+    state: present
+
+- name: Create Slurm User
+  user:
+    name: slurm
+    uid: 1111
+    state: present
+    system: yes
+
+- name: Munge Key - Generate on Master
+  command: /usr/sbin/create-munge-key -f
+  args:
+    creates: /etc/munge/munge.key
+  when: "'slurm_master' in group_names"
+  notify: Restart Munge
+
+- name: Munge Key - Fetch from Master
+  fetch:
+    src: /etc/munge/munge.key
+    dest: /tmp/munge.key
+    flat: yes
+  when: "'slurm_master' in group_names"
+
+- name: Munge Key - Distribute to Workers
+  copy:
+    src: /tmp/munge.key
+    dest: /etc/munge/munge.key
+    owner: munge
+    group: munge
+    mode: '0400'
+  when: "'slurm_compute' in group_names"
+  notify: Restart Munge
+
+- name: Ensure Munge Service Running
+  service:
+    name: munge
+    state: started
+    enabled: yes
+
+# --- Configuration ---
+- name: Create Slurm Log Directory
+  file:
+    path: /var/log/slurm
+    state: directory
+    owner: slurm
+    group: slurm
+    mode: '0755'
+
+- name: Deploy slurm.conf
+  template:
+    src: slurm.conf.j2
+    dest: /etc/slurm/slurm.conf
+    owner: slurm
+    group: slurm
+    mode: '0644'
+  notify: 
+    - Restart Slurmctld
+    - Restart Slurmd
+
+- name: Create cgroup.conf
+  copy:
+    dest: /etc/slurm/cgroup.conf
+    content: |
+      CgroupAutomount=yes
+      ConstrainCores=no
+      ConstrainRAM=no
+  notify: restart slurmd
+
+# --- Master Specific ---
+- name: Start Slurm Controller
+  service:
+    name: slurmctld
+    state: started
+    enabled: yes
+  when: "'slurm_master' in group_names"
+
+# --- Worker Specific ---
+- name: Start Slurm Daemon
+  service:
+    name: slurmd
+    state: started
+    enabled: yes
+  when: "'slurm_compute' in group_names"

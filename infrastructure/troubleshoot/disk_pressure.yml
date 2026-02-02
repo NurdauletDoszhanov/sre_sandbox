@@ -1,0 +1,14 @@
+---
+- hosts: k8s_workers
+  become: yes
+  tasks:
+    - name: Create garbage file to fill disk (Chaos)
+      command: fallocate -l 15G /tmp/trash.img
+      tags: ['chaos']
+      ignore_errors: yes
+
+    - name: Remove garbage file (Restore)
+      file:
+        path: /tmp/trash.img
+        state: absent
+      tags: ['restore']

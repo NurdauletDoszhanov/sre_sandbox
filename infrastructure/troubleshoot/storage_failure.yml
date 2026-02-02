@@ -1,0 +1,15 @@
+---
+- hosts: storage
+  become: yes
+  tasks:
+    - name: Stop MinIO Container (Chaos)
+      docker_container:
+        name: minio
+        state: stopped
+      tags: ['chaos']
+
+    - name: Start MinIO Container (Restore)
+      docker_container:
+        name: minio
+        state: started
+      tags: ['restore']

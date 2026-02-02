@@ -1,0 +1,27 @@
+ClusterName=mini-cluster
+SlurmctldHost={{ hostvars[groups['slurm_master'][0]]['ansible_hostname'] }}
+MungeSocket=/var/run/munge/munge.socket.2
+
+# Logging
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdLogFile=/var/log/slurm/slurmd.log
+
+# Timers
+SlurmctldTimeout=300
+SlurmdTimeout=300
+InactiveLimit=0
+MinJobAge=300
+KillWait=30
+Waittime=0
+
+# Scheduler
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core
+
+# Compute Nodes
+# Assuming 1 CPU, 2GB RAM minimum for these VMs as per Terraform
+NodeName=hpc-worker-01 CPUs=4 RealMemory=7500 State=UNKNOWN
+
+# Partitions
+PartitionName=debug Nodes=hpc-worker-01 Default=YES MaxTime=INFINITE State=UP

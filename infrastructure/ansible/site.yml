@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - common
+
+- hosts: storage
+  become: yes
+  roles:
+    - docker
+    - minio
+
+- hosts: slurm_compute:infrastructure
+  become: yes
+  roles:
+    - s3client
+
+- hosts: slurm_master:slurm_compute
+  become: yes
+  roles:
+    - slurm
+
+- hosts: k8s_master
+  become: yes
+  roles:
+    - k3s
+    - monitoring
+
+- hosts: k8s_workers
+  become: yes
+  roles:
+    - k3s
+    - gpu_support
+
+
+

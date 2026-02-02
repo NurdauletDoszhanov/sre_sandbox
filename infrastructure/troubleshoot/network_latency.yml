@@ -1,0 +1,13 @@
+---
+- hosts: slurm_compute
+  become: yes
+  tasks:
+    - name: Add 500ms Network Latency (Chaos)
+      command: tc qdisc add dev eth0 root netem delay 500ms
+      tags: ['chaos']
+      ignore_errors: yes # Ignore if already exists
+
+    - name: Remove Network Latency (Restore)
+      command: tc qdisc del dev eth0 root
+      tags: ['restore']
+      ignore_errors: yes # Ignore if doesn't exist

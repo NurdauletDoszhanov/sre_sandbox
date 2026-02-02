@@ -1,0 +1,47 @@
+---
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+  when: ansible_os_family == 'Debian'
+
+- name: Update dnf cache and upgrade packages
+  dnf:
+    update_cache: yes
+    name: "*"
+    state: latest
+  when: ansible_os_family == 'RedHat'
+
+- name: Install common dependencies
+  package:
+    name:
+      - curl
+      - wget
+      - git
+      - htop
+      - vim
+      - net-tools
+    state: present
+
+- name: Disable Swap (Temporary)
+  command: swapoff -a
+  changed_when: false
+
+- name: Disable Swap (Permanent)
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
+
+- name: Set up authorized keys
+  authorized_key:
+    user: "{{ ansible_user | default('root') }}"
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+  ignore_errors: yes
+
+- name: Configure /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    mode: '0644'

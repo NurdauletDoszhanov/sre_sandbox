@@ -1,0 +1,65 @@
+---
+- name: Install dependencies
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: latest
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install Docker (RedHat/Rocky)
+  dnf:
+    name: docker-ce
+    state: present
+  when: ansible_os_family == 'RedHat' # Simplified for Rocky, usually needs repo add too but assuming standard repo or pre-added for now. 
+  # Actually for Rocky standard is to use dnf config-manager to add repo.
+  # Adding repo step for Rocky to be safe.
+
+- name: Add Docker Repo (Rocky)
+  command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Docker packages (Rocky)
+  dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Install python3-docker for Ansible modules
+  package:
+    name: python3-docker
+    state: present

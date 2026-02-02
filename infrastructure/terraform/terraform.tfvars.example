@@ -1,0 +1,7 @@
+pm_api_url      = "https://192.168.1.X:8006/api2/json"
+pm_user         = "root@pam"
+pm_password     = "your_secure_password"
+proxmox_node    = "pve1"
+ssh_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+template_name   = "ubuntu-2204-cloudinit-template"
+gateway         = "192.168.1.1"

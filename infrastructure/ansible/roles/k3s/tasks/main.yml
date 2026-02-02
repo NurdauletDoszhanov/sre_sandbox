@@ -1,0 +1,39 @@
+---
+- name: Install K3s Master
+  shell: curl -sfL https://get.k3s.io | sh -
+  args:
+    creates: /usr/local/bin/k3s
+  when: "'k8s_master' in group_names"
+
+- name: Get K3s Node Token
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token
+  when: "'k8s_master' in group_names"
+
+- name: Register Token Variable
+  set_fact:
+    k3s_token: "{{ node_token['content'] | b64decode | trim }}"
+  when: "'k8s_master' in group_names"
+
+- name: Copy Kubeconfig to User Home
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/{{ ansible_user }}/.kube/config
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    mode: '0600'
+  ignore_errors: yes # directory might not exist yet, typically need to create .kube dir first
+  when: "'k8s_master' in group_names"
+
+- name: Share Token with Workers (Dummy Step to Propagate Fact)
+  set_fact:
+    master_ip: "{{ hostvars[groups['k8s_master'][0]]['ansible_host'] }}"
+    join_token: "{{ hostvars[groups['k8s_master'][0]]['k3s_token'] }}"
+  when: "'k8s_workers' in group_names"
+
+- name: Install K3s Worker
+  shell: "curl -sfL https://get.k3s.io | K3S_URL=https://{{ master_ip }}:6443 K3S_TOKEN={{ join_token }} sh -"
+  args:
+    creates: /usr/local/bin/k3s-agent
+  when: "'k8s_workers' in group_names"

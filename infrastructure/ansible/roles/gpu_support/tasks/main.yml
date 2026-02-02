@@ -1,0 +1,28 @@
+---
+- name: Add NVIDIA Container Toolkit GPG Key
+  apt_key:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Add NVIDIA Container Toolkit Repository
+  get_url:
+    url: https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list
+    dest: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  when: ansible_os_family == 'Debian'
+
+- name: Install NVIDIA Container Toolkit
+  apt:
+    update_cache: yes
+    name: nvidia-container-toolkit
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Configure Containerd for NVIDIA
+  command: nvidia-ctk runtime configure --runtime=containerd
+  notify: Restart Containerd
+
+- name: Restart K3s Agent to pick up changes
+  service:
+    name: k3s-agent
+    state: restarted

@@ -1,0 +1,7 @@
+[default]
+access_key = minioadmin
+secret_key = minioadmin
+host_base = {{ hostvars['storage-01']['ansible_host'] | default('192.168.1.20') }}:9000
+host_bucket = {{ hostvars['storage-01']['ansible_host'] | default('192.168.1.20') }}:9000/%(bucket)s
+use_https = False
+signature_v2 = False

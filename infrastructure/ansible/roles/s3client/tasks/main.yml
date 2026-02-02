@@ -1,0 +1,11 @@
+---
+- name: Install s3cmd
+  package:
+    name: s3cmd
+    state: present
+
+- name: Configure .s3cfg
+  template:
+    src: .s3cfg.j2
+    dest: ~/.s3cfg
+    mode: '0600'

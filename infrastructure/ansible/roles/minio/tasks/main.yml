@@ -1,0 +1,28 @@
+---
+- name: Create MinIO data directory
+  file:
+    path: /data/minio
+    state: directory
+    mode: '0755'
+    owner: 1000 # MinIO default user often 1000
+    group: 1000
+
+- name: Pull MinIO image
+  docker_image:
+    name: minio/minio
+    source: pull
+
+- name: Run MinIO container
+  docker_container:
+    name: minio
+    image: minio/minio
+    restart_policy: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env:
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    volumes:
+      - "/data/minio:/data"
+    command: server /data --console-address ":9001"
