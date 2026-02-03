@@ -1,17 +1,4 @@
 ---
-- name: Update apt cache and upgrade packages
-  apt:
-    update_cache: yes
-    upgrade: dist
-  when: ansible_os_family == 'Debian'
-
-- name: Update dnf cache and upgrade packages
-  dnf:
-    update_cache: yes
-    name: "*"
-    state: latest
-  when: ansible_os_family == 'RedHat'
-
 - name: Install common dependencies
   package:
     name:
@@ -22,6 +9,10 @@
       - vim
       - net-tools
     state: present
+  register: pkg_res
+  retries: 5
+  delay: 10
+  until: pkg_res is success
 
 - name: Disable Swap (Temporary)
   command: swapoff -a
@@ -37,7 +28,7 @@
   authorized_key:
     user: "{{ ansible_user | default('root') }}"
     state: present
-    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    key: "{{ lookup('file', '/home/ubuntu/.ssh/id_rsa.pub') }}"
   ignore_errors: yes
 
 - name: Configure /etc/hosts

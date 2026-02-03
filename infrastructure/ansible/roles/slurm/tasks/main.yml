@@ -4,10 +4,13 @@
   package:
     name:
       - munge
-      - slurm-slurmd
-      - slurm-slurmctld # On Rocky this might be separate, usually 'slurm' covers base. checking specific OS support might be needed but assuming Rocky/RHEL names here or EPEL.
-      # For Rocky/RHEL (EPEL): munge, slurm, slurm-slurmd, slurm-slurmctld
+      - slurmd
+      - slurmctld 
     state: present
+  register: pkg_res
+  retries: 5
+  delay: 10
+  until: pkg_res is success
 
 - name: Create Slurm User
   user:
@@ -71,9 +74,7 @@
     dest: /etc/slurm/cgroup.conf
     content: |
       CgroupAutomount=yes
-      ConstrainCores=no
-      ConstrainRAM=no
-  notify: restart slurmd
+  notify: Restart Slurmd
 
 # --- Master Specific ---
 - name: Start Slurm Controller

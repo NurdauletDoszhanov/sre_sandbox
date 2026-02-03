@@ -1,0 +1,3 @@
+SHA256(ubuntu-bionic-18.04-cloudimg.vmdk)= b0b11d8bcf65285abfe204ded331f5d5aee75a794d0576c32c2778bf2e44ddab
+SHA256(ubuntu-bionic-18.04-cloudimg-configdrive.vmdk)= 410d827af1d4c46ae04ac259b21918878ad6f0683c7f4aad017025877126af4b
+SHA256(box.ovf)= d3a495fe5d78d491dc6680cc5edae7198740c48e0f33fa9f4940d9a39fafca06

@@ -1,7 +1,14 @@
-pm_api_url      = "https://192.168.1.X:8006/api2/json"
-pm_user         = "root@pam"
-pm_password     = "your_secure_password"
-proxmox_node    = "pve1"
-ssh_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
-template_name   = "ubuntu-2204-cloudinit-template"
-gateway         = "192.168.1.1"
+# Ubuntu Image Configuration
+# Available options: 22.04, 24.04, jammy, noble, etc.
+ubuntu_image = "22.04"
+
+# VM Configuration
+# Uncomment and modify to customize VMs
+# vms = {
+#   "mgmt-01"       = { ip = "192.168.1.10", cpus = 1, memory = "1G", disk = "10G" }
+#   "storage-01"    = { ip = "192.168.1.20", cpus = 1, memory = "1G", disk = "20G" }
+#   "hpc-master"    = { ip = "192.168.1.30", cpus = 2, memory = "2G", disk = "10G" }
+#   "hpc-worker-01" = { ip = "192.168.1.31", cpus = 2, memory = "3G", disk = "10G" }
+#   "k8s-master"    = { ip = "192.168.1.40", cpus = 2, memory = "2G", disk = "15G" }
+#   "k8s-gpu-01"    = { ip = "192.168.1.41", cpus = 2, memory = "3G", disk = "15G" }
+# }

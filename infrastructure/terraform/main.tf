@@ -1,55 +1,63 @@
 variable "vms" {
   type = map(object({
-    ip     = string
-    core   = number
-    memory = number
-    os_type = string # 'ubuntu' or 'rocky' - just for reference if needed, but we rely on single template in this simple example or could make it map based
+    ip      = string
+    cpus    = number
+    memory  = string
+    disk    = string
   }))
   default = {
-    "mgmt-01"      = { ip = "192.168.1.10", core = 2, memory = 2048, os_type = "ubuntu" }
-    "storage-01"   = { ip = "192.168.1.20", core = 2, memory = 2048, os_type = "rocky" }
-    "hpc-master"   = { ip = "192.168.1.30", core = 2, memory = 4096, os_type = "rocky" }
-    "hpc-worker-01"= { ip = "192.168.1.31", core = 4, memory = 8192, os_type = "rocky" }
-    "k8s-master"   = { ip = "192.168.1.40", core = 2, memory = 4096, os_type = "ubuntu" }
-    "k8s-gpu-01"   = { ip = "192.168.1.41", core = 4, memory = 8192, os_type = "ubuntu" }
+    "mgmt-01"       = { ip = "192.168.1.10", cpus = 1, memory = "1G", disk = "10G" }
+    "storage-01"    = { ip = "192.168.1.20", cpus = 1, memory = "1G", disk = "20G" }
+    "hpc-master"    = { ip = "192.168.1.30", cpus = 2, memory = "2G", disk = "10G" }
+    "hpc-worker-01" = { ip = "192.168.1.31", cpus = 2, memory = "3G", disk = "10G" }
+    "k8s-master"    = { ip = "192.168.1.40", cpus = 2, memory = "2G", disk = "15G" }
+    "k8s-gpu-01"    = { ip = "192.168.1.41", cpus = 2, memory = "3G", disk = "15G" }
   }
 }
 
-resource "proxmox_vm_qemu" "node" {
+variable "ubuntu_image" {
+  type        = string
+  default     = "22.04"
+  description = "Ubuntu image version for Multipass (e.g., 22.04, 24.04, jammy, noble)"
+}
+
+resource "null_resource" "multipass_vm" {
   for_each = var.vms
 
-  name        = each.key
-  target_node = var.proxmox_node
-  clone       = var.template_name
-  
-  agent       = 1
-  os_type     = "cloud-init"
-  cores       = each.value.core
-  sockets     = 1
-  cpu         = "host"
-  memory      = each.value.memory
-  scsihw      = "virtio-scsi-pci"
-  bootdisk    = "scsi0"
-
-  disk {
-    slot = 0
-    size = "20G"
-    type = "scsi"
-    storage = "local-lvm" # Adjust storage pool as needed
+  triggers = {
+    vm_name = each.key
+    cpus    = each.value.cpus
+    memory  = each.value.memory
+    disk    = each.value.disk
+    image   = var.ubuntu_image
   }
 
-  network {
-    model  = "virtio"
-    bridge = "vmbr0"
+  provisioner "local-exec" {
+    command     = "multipass launch ${var.ubuntu_image} --name ${each.key} --cpus ${each.value.cpus} --memory ${each.value.memory} --disk ${each.value.disk}"
+    interpreter = ["powershell", "-Command"]
   }
-  
-  # Cloud Init Settings
-  ipconfig0 = "ip=${each.value.ip}/24,gw=${var.gateway}"
-  sshkeys   = var.ssh_public_key
-  
-  lifecycle {
-    ignore_changes = [
-      network,
-    ]
+
+  provisioner "local-exec" {
+    when        = destroy
+    command     = "multipass delete ${self.triggers.vm_name} --purge"
+    interpreter = ["powershell", "-Command"]
+    on_failure  = continue
   }
+}
+
+output "vm_info" {
+  value = {
+    for name, config in var.vms : name => {
+      cpus   = config.cpus
+      memory = config.memory
+      disk   = config.disk
+      image  = var.ubuntu_image
+    }
+  }
+  description = "Configuration of created Multipass VMs"
+}
+
+output "get_ips_command" {
+  value       = "multipass list"
+  description = "Run this command to see VM IP addresses"
 }

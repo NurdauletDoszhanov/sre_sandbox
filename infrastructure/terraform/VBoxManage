@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# VBoxManage wrapper for WSL
+# Converts /mnt/c/ paths to C:\ Windows paths
+
+ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == /mnt/c/* ]]; then
+        # Convert /mnt/c/... to C:\...
+        # 1. Replace /mnt/c with C:
+        win_path="${arg/\/mnt\/c/C:}"
+        # 2. Replace / with \
+        win_path="${win_path//\//\\}"
+        ARGS+=("$win_path")
+    elif [[ "$arg" == "./"* ]]; then
+        # Convert relative paths ./foo to absolute Windows path
+        abs_path="$(pwd)/${arg:2}"
+        win_path="${abs_path/\/mnt\/c/C:}"
+        win_path="${win_path//\//\\}"
+        ARGS+=("$win_path")
+    else
+        ARGS+=("$arg")
+    fi
+done
+
+# Call the actual Windows binary
+"/mnt/c/Program Files/Oracle/VirtualBox/VBoxManage.exe" "${ARGS[@]}"

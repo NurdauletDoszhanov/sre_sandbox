@@ -11,16 +11,25 @@
     dest: /etc/apt/sources.list.d/nvidia-container-toolkit.list
   when: ansible_os_family == 'Debian'
 
-- name: Install NVIDIA Container Toolkit
+- name: Install NVIDIA Container Toolkit and dependencies
   apt:
-    update_cache: yes
-    name: nvidia-container-toolkit
+    name:
+      - nvidia-container-toolkit
+      - runc
     state: present
+  register: apt_res
+  retries: 5
+  delay: 10
+  until: apt_res is success
   when: ansible_os_family == 'Debian'
 
-- name: Configure Containerd for NVIDIA
-  command: nvidia-ctk runtime configure --runtime=containerd
-  notify: Restart Containerd
+- name: Configure Containerd for NVIDIA (K3s)
+  template:
+    src: config.toml.tmpl.j2
+    dest: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Restart K3s Agent to pick up changes
   service:

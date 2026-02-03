@@ -16,6 +16,14 @@
     k3s_token: "{{ node_token['content'] | b64decode | trim }}"
   when: "'k8s_master' in group_names"
 
+- name: Create .kube directory
+  file:
+    path: /home/{{ ansible_user }}/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: '0700'
+  when: "'k8s_master' in group_names"
+
 - name: Copy Kubeconfig to User Home
   copy:
     src: /etc/rancher/k3s/k3s.yaml
@@ -23,7 +31,6 @@
     remote_src: yes
     owner: "{{ ansible_user }}"
     mode: '0600'
-  ignore_errors: yes # directory might not exist yet, typically need to create .kube dir first
   when: "'k8s_master' in group_names"
 
 - name: Share Token with Workers (Dummy Step to Propagate Fact)

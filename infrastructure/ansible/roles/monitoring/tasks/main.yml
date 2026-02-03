@@ -5,16 +5,23 @@
     creates: /usr/local/bin/helm
 
 - name: Add Prometheus Community Repo
-  kubernetes.core.helm_repository:
+  community.kubernetes.helm_repository:
     name: prometheus-community
     repo_url: https://prometheus-community.github.io/helm-charts
 
+- name: Wait for K3s API to be ready
+  wait_for:
+    port: 6443
+    delay: 10
+    timeout: 300
+
 - name: Install Prometheus Stack
-  kubernetes.core.helm:
+  community.kubernetes.helm:
     name: kube-prometheus-stack
     chart_ref: prometheus-community/kube-prometheus-stack
     release_namespace: monitoring
     create_namespace: true
     wait: yes
-    timeout: 10m0s
+    kubeconfig_path: /etc/rancher/k3s/k3s.yaml
+    wait_timeout: 600s
   ignore_errors: yes # Might fail if k8s isn't fully ready immediately

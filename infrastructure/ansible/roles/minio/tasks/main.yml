@@ -8,12 +8,12 @@
     group: 1000
 
 - name: Pull MinIO image
-  docker_image:
+  community.docker.docker_image:
     name: minio/minio
     source: pull
 
 - name: Run MinIO container
-  docker_container:
+  community.docker.docker_container:
     name: minio
     image: minio/minio
     restart_policy: always

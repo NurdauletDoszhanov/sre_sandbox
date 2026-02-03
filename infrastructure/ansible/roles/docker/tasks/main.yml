@@ -7,7 +7,10 @@
       - gnupg
       - lsb-release
     state: present
-    update_cache: yes
+  register: apt_res
+  retries: 5
+  delay: 10
+  until: apt_res is success
   when: ansible_os_family == 'Debian'
 
 - name: Add Docker GPG key
@@ -29,7 +32,10 @@
       - docker-ce-cli
       - containerd.io
     state: latest
-    update_cache: yes
+  register: apt_res
+  retries: 5
+  delay: 10
+  until: apt_res is success
   when: ansible_os_family == 'Debian'
 
 - name: Install Docker (RedHat/Rocky)
